@@ -18,8 +18,8 @@ defmodule Slack.SendsTest do
   end
 
   test "send_message sends message formatted to client" do
-    result = Sends.send_message("hello", "channel", %{process: nil, client: FakeWebsocketClient})
-    assert result == {nil, ~s/{"channel":"channel","text":"hello","type":"message"}/}
+    {nil, result} = Sends.send_message("hello", "channel", %{process: nil, client: FakeWebsocketClient})
+    assert %{channel: "channel", text: "hello", type: "message"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_message understands #channel names" do
@@ -29,8 +29,8 @@ defmodule Slack.SendsTest do
       channels: %{"C456" => %{name: "channel", id: "C456"}}
     }
 
-    result = Sends.send_message("hello", "#channel", slack)
-    assert result == {nil, ~s/{"channel":"C456","text":"hello","type":"message"}/}
+    {nil, result} = Sends.send_message("hello", "#channel", slack)
+    assert %{channel: "C456", text: "hello", type: "message"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_message understands @user names" do
@@ -41,8 +41,8 @@ defmodule Slack.SendsTest do
       ims: %{"D789" => %{user: "U123", id: "D789"}}
     }
 
-    result = Sends.send_message("hello", "@user", slack)
-    assert result == {nil, ~s/{"channel":"D789","text":"hello","type":"message"}/}
+    {nil, result} = Sends.send_message("hello", "@user", slack)
+    assert %{channel: "D789", text: "hello", type: "message"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_message understands user ids (Uxxx)" do
@@ -53,8 +53,8 @@ defmodule Slack.SendsTest do
       ims: %{"D789" => %{user: "U123", id: "D789"}}
     }
 
-    result = Sends.send_message("hello", "U123", slack)
-    assert result == {nil, ~s/{"channel":"D789","text":"hello","type":"message"}/}
+    {nil, result} = Sends.send_message("hello", "U123", slack)
+    assert %{channel: "D789", text: "hello", type: "message"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_message understands user ids (Wxxx)" do
@@ -65,8 +65,8 @@ defmodule Slack.SendsTest do
       ims: %{"D789" => %{user: "W123", id: "D789"}}
     }
 
-    result = Sends.send_message("hello", "W123", slack)
-    assert result == {nil, ~s/{"channel":"D789","text":"hello","type":"message"}/}
+    {nil, result} = Sends.send_message("hello", "W123", slack)
+    assert %{channel: "D789", text: "hello", type: "message"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_message with a thread attribute includes thread_ts in message to client" do
@@ -77,35 +77,33 @@ defmodule Slack.SendsTest do
       ims: %{"D789" => %{user: "U123", id: "D789"}}
     }
 
-    result = Sends.send_message("hello", "D789", slack, "1555508888.000100")
+    {nil, result} = Sends.send_message("hello", "D789", slack, "1555508888.000100")
 
-    assert result ==
-             {nil,
-              ~s/{"channel":"D789","text":"hello","thread_ts":"1555508888.000100","type":"message"}/}
+    assert %{channel: "D789", text: "hello", thread_ts: "1555508888.000100", type: "message"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "indicate_typing sends typing notification to client" do
-    result = Sends.indicate_typing("channel", %{process: nil, client: FakeWebsocketClient})
-    assert result == {nil, ~s/{"channel":"channel","type":"typing"}/}
+    {nil, result} = Sends.indicate_typing("channel", %{process: nil, client: FakeWebsocketClient})
+    assert %{channel: "channel", type: "typing"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_ping sends ping to client" do
-    result = Sends.send_ping(%{process: nil, client: FakeWebsocketClient})
-    assert result == {nil, ~s/{"type":"ping"}/}
+    {nil, result} = Sends.send_ping(%{process: nil, client: FakeWebsocketClient})
+    assert %{type: "ping"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "send_ping with data sends ping + data to client" do
-    result = Sends.send_ping(%{foo: :bar}, %{process: nil, client: FakeWebsocketClient})
-    assert result == {nil, ~s/{"foo":"bar","type":"ping"}/}
+    {nil, result} = Sends.send_ping(%{foo: :bar}, %{process: nil, client: FakeWebsocketClient})
+    assert %{foo: "bar", type: "ping"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "subscribe_presence sends presence subscription message to client" do
-    result = Sends.subscribe_presence(["a_user_id"], %{process: nil, client: FakeWebsocketClient})
-    assert result == {nil, ~s/{"ids":["a_user_id"],"type":"presence_sub"}/}
+    {nil, result} = Sends.subscribe_presence(["a_user_id"], %{process: nil, client: FakeWebsocketClient})
+    assert %{ids: ["a_user_id"], type: "presence_sub"} = Jason.decode!(result, keys: :atoms)
   end
 
   test "subscribe_presence without ids sends presence subscription message to client" do
-    result = Sends.subscribe_presence(%{process: nil, client: FakeWebsocketClient})
-    assert result == {nil, ~s/{"ids":[],"type":"presence_sub"}/}
+    {nil, result} = Sends.subscribe_presence(%{process: nil, client: FakeWebsocketClient})
+    assert %{ids: [], type: "presence_sub"} = Jason.decode!(result, keys: :atoms)
   end
 end
